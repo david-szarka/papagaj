@@ -15,23 +15,401 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import tkinter as tk
+
 import os
-from papagajsee import recordPapagaj
-from papagajdo import playPapagaj
-import pickle
-import webbrowser as wb
-import threading
 import sys
+import pickle
+import datetime
+import time
+import threading
+from pynput.mouse import Button
+from pynput.keyboard import Key
+from pynput import keyboard, mouse
+from re import findall
+import webbrowser as wb
+import tkinter as tk
+from tkinter import filedialog
 
 #from tkinter import * 
-#from tkinter.ttk import * 
+#from tkinter.ttk import *
+hejmore = [0,]
 
+
+
+# playPapagaj
+def playPapagaj(dataAboutPlay,endfunction,startedfunc,alreadyFinishedRep,updateLabels):
+    def stop(stopfunction=endfunction):
+        listenerk.stop()
+        stopfunction()
+
+    def pressed(key):
+        if key == datadictionary["pausekeybutton"]:
+            if not datadictionary["paused"]:
+                datadictionary["paused"] = 1
+                updateLabels("Playing paused")
+            else:
+                datadictionary["paused"] = 2
+                #updateLabels("Playing")
+        elif datadictionary["paused"] and key == datadictionary["cancelkeybutton"]:
+            datadictionary["kill"] = 1
+
+    def released(key):
+        if key == datadictionary["pausekeybutton"]:
+            if datadictionary["paused"]==2:
+                datadictionary["paused"] = 0
+                updateLabels("Playing")
+
+    def executeseq(a, b, mousex, keyboardx):
+        c= b
+        for iii in range(a,repeatition):
+            for j,i in enumerate(sequence["sequence"][b:]):
+                if hejmore[0]:
+                    sys.exit()
+                if datadictionary["paused"]:
+                    c=b+j
+                    return True,a,c
+                if datadictionary["kill"]:
+                    c=b+j
+                    return False,a,c
+                if i[0] in ['keyboardx.press({0})', 'keyboardx.release({0})']:
+                    exec(i[0].format('sequence["keydirectory"][i[1]]'))
+                else:
+                    exec(i[0].format(i[1]))
+                c= b+j+1
+            b=0
+            a = iii+1
+            alreadyFinishedRep(a,repeatition,koeficientspeed)
+        return False,a,c
+
+    def readWpickle(a):
+        with open(a, 'rb') as pickleFile:
+            sequenceData = pickle.load(pickleFile)
+        return sequenceData
+
+    def initialconfig():
+        dataDict={
+            "lasttime": 0
+            , "paused": False
+            , "kill": False
+            , "alreadyrepeated": 0
+            , "alreadyexecuted": 0
+            , "configfile": 'papagajconfig.pcfg'
+            }
+
+        if not os.path.isfile(dataDict["configfile"]):
+            bkpconfig()
+
+        with open(dataDict["configfile"],'r') as conf:
+            dataRaw = conf.read()
+
+        dataDict["savekeyboarddictto"] = dataAboutPlay['fileToOpen']
+        dataDict["pausekeybutton"] = eval(findall('pausekeybutton=<<(.*?)>>',dataRaw)[0])
+        dataDict["cancelkeybutton"] = eval(findall('cancelkeybutton=<<(.*?)>>',dataRaw)[0])
+        return dataDict
+
+    def bkpconfig():
+        if os.name == "posix":
+            cancelbutton = "\ncancelkeybutton=<<keyboard.Key.alt>>\n"
+        elif os.name == "nt":
+            cancelbutton = "\ncancelkeybutton=<<keyboard.Key.alt_l>>\n"
+        else:
+            cancelbutton = "\ncancelkeybutton=<<keyboard.Key.alt>>\n"
+    
+        configbackup ="""
+# coding=utf-8
+# papagaj
+# Copyright (C) 2019 Dávid Szarka
+#
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+scrollkoeficient=<<0>> for windows 120 for linux 1
+pausekeybutton=<<keyboard.Key.shift_r>>""" + cancelbutton
+        with open('papagajconfig.pcfg', 'w') as configbakupfl:
+            configbakupfl.write(configbackup)
+
+    def sequenceRun():
+        def recalcspeed(koeffspeed):
+            for i,j in enumerate(sequence["sequence"]):
+                if "time.sleep(" in j[0]:
+                    timesleep = float(j[1])
+                    timesleep *= koeffspeed 
+                    sequence["sequence"][i][1] = timesleep
+                    
+        def checkCommands():
+            checList = {
+                'time.sleep({0})'
+                , 'keyboardx.press({0})'
+                , 'keyboardx.release({0})'
+                , 'keyboardx.type({0})'
+                , 'mousex.press({0})'
+                , 'mousex.release({0})'
+                , 'mousex.position = ({0[0]} ,{0[1]})'
+                , 'mousex.scroll({0[0]} ,{0[1]})'
+                }
+            for i,j in enumerate(sequence["sequence"]):
+                if j[0] not in checList:
+                    raise
+                
+        datadictionary = initialconfig()
+        sequence = readWpickle(datadictionary["savekeyboarddictto"])
+        recalcspeed(koeficientspeed)
+        checkCommands()
+        return datadictionary, sequence
+
+    def makeListenAndControl():
+        mousexx = mouse.Controller()
+        keyboardxx = keyboard.Controller()
+        listenerkxx = keyboard.Listener(
+                on_press = pressed
+                ,on_release = released
+                )
+        listenerkxx.start()
+        listenerkxx.wait()
+        return mousexx, keyboardxx, listenerkxx
+
+    def startPlay():
+        datadictionary["paused"] = 0
+        while not datadictionary["kill"]:
+            if hejmore[0]:
+                sys.exit()
+            time.sleep(0.2)
+            if not datadictionary["paused"]:
+                endRun \
+                , datadictionary["alreadyrepeated"] \
+                , datadictionary["alreadyexecuted"] = executeseq(datadictionary["alreadyrepeated"]
+                                                                 , datadictionary["alreadyexecuted"]
+                                                                 , mousex
+                                                                 , keyboardx
+                                                                 )
+                if endRun:
+                    continue
+                else:
+                    break
+        stop()
+
+    repeatition = dataAboutPlay['repeatition']['result']
+    koeficientspeed = dataAboutPlay['koeficientspeed']['result']
+    datadictionary, sequence = sequenceRun()
+    mousex, keyboardx, listenerk = makeListenAndControl()
+    startedfunc()
+    startPlay()
+
+
+
+
+
+
+# recordPapagaj
+def recordPapagaj(endfunction,updateLabels,saveSeqFunc):
+    def stop(stopfunction=updateLabels):
+        listeners["listenerk"].stop()
+        listeners["listenerm"].stop()
+        stopfunction("Recording finished")
+        saveSeqFunc(sequencelist)
+        endfunction()
+
+    def sleepafakaprint(lasttimeinput):
+        acttime=datetime.datetime.now()
+        deltatime = round((acttime - lasttimeinput ).total_seconds(),1)
+        if deltatime > 0:
+            elxprint(sequencelist,'time.sleep({0})',deltatime)
+            lasttimeinput = acttime
+        return lasttimeinput
+
+    def elxprint(listToAppend,commandis,elvalue):
+        if hejmore[0]:
+            sys.exit()
+        if commandis in ['keyboardx.press({0})', 'keyboardx.release({0})']:
+            try:
+                try:
+                    if elvalue.vk == 0:#elvalue == "<0>" or elvalue.vk == 0
+                        raise
+                except AttributeError:
+                    if str(elvalue) == "<0>":#elvalue == "<0>" or elvalue.vk == 0
+                        raise
+            except:
+                return
+                if commandis in ['keyboardx.press({0})',]:
+                    print("niektore tlacitko nie je mozne zaznamenat")
+                
+            strdictElvalue = str(elvalue.__dict__)
+            listToAppend["keydirectory"][strdictElvalue] = elvalue
+            listToAppend["sequence"].append([commandis,strdictElvalue])
+        else:
+            listToAppend["sequence"].append([commandis,elvalue])
+
+    def pressed(key):
+        if key == datadictionary["pausekeybutton"]:
+            if not datadictionary["paused1"]:
+                datadictionary["lasttime"] = datetime.datetime.now()
+                datadictionary["paused1"], datadictionary["paused2"] = True,True
+                updateLabels("Recording paused")
+            else:
+                datadictionary["paused1"] = False
+        elif key == datadictionary["cancelkeybutton"] and datadictionary["paused2"]:
+            stop()
+        else:
+            if datadictionary["paused2"] != True:
+                datadictionary["lasttime"] = sleepafakaprint(datadictionary["lasttime"])
+                elxprint(sequencelist,'keyboardx.press({0})',key)
+
+    def released(key):
+        if key == datadictionary["pausekeybutton"]:
+            if not datadictionary["paused1"] and datadictionary["paused2"]:
+                datadictionary["lasttime"] = datetime.datetime.now()
+                datadictionary["paused2"] = False
+
+                updateLabels("Recording")
+        else:
+            if datadictionary["paused2"] != True:
+                datadictionary["lasttime"] = sleepafakaprint(datadictionary["lasttime"])
+                elxprint(sequencelist,'keyboardx.release({0})',key)
+
+    def clicked(x, y, button, pressed):
+        if datadictionary["paused2"] != True:
+            datadictionary["lasttime"] = sleepafakaprint(datadictionary["lasttime"])
+            elxprint(sequencelist,'mousex.position = ({0[0]} ,{0[1]})',(x, y))
+            if pressed:
+                elxprint(sequencelist,'mousex.press({0})',button)
+            else:
+                elxprint(sequencelist,'mousex.release({0})',button)  
+
+    def scrolled(x, y, dx, dy):
+        if datadictionary["paused2"] != True:
+            datadictionary["lasttime"] = sleepafakaprint(datadictionary["lasttime"])
+            elxprint(sequencelist,'mousex.position = ({0[0]} ,{0[1]})',(x, y))
+            elxprint(sequencelist,'mousex.scroll({0[0]} ,{0[1]})',(dx,dy*datadictionary["scrollkoeficient"]))
+
+    def moved(x, y):
+        if datadictionary["paused2"] != True:
+            datadictionary["lasttime"] = sleepafakaprint(datadictionary["lasttime"])
+            elxprint(sequencelist,'mousex.position = ({0[0]} ,{0[1]})',(x, y))
+
+    def initialconfig():
+        scriptsequence = {
+            "sequence":list()
+            , "keydirectory":dict()
+            }
+        datadictionary={
+            "lasttime": 0
+            ,"paused1": False
+            ,"paused2": False
+            ,"configfile": 'papagajconfig.pcfg'
+            }
+        if not os.path.isfile(datadictionary["configfile"]):
+            bkpconfig()
+        with open(datadictionary["configfile"],'r') as conf:
+            dataRaw = conf.read()
+        scrollkoeficient = int(findall('scrollkoeficient=<<(.*?)>>',dataRaw)[0])
+        if not scrollkoeficient:
+            if os.name == "posix":
+                scrollkoeficient = 1
+            elif os.name == "nt":
+                scrollkoeficient = 120
+            else:
+                scrollkoeficient = 120
+        datadictionary["scrollkoeficient"] = scrollkoeficient
+        #datadictionary["savekeyboarddictto"] = str(findall('savekeyboarddictto=<<(.*?)>>',dataRaw)[0])
+        datadictionary["pausekeybutton"] = eval(findall('pausekeybutton=<<(.*?)>>',dataRaw)[0])
+        datadictionary["cancelkeybutton"] = eval(findall('cancelkeybutton=<<(.*?)>>',dataRaw)[0])
+        return datadictionary, scriptsequence
+
+    def bkpconfig():
+        if os.name == "posix":
+            cancelbutton = "\ncancelkeybutton=<<keyboard.Key.alt>>\n"
+        elif os.name == "nt":
+            cancelbutton = "\ncancelkeybutton=<<keyboard.Key.alt_l>>\n"
+        else:
+            cancelbutton = "\ncancelkeybutton=<<keyboard.Key.alt>>\n"
+    
+        configbackup ="""
+# coding=utf-8
+# papagaj
+# Copyright (C) 2019 Dávid Szarka
+#
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+scrollkoeficient=<<0>> for windows 120 for linux 1
+pausekeybutton=<<keyboard.Key.shift_r>>""" + cancelbutton
+        with open('papagajconfig.pcfg', 'w') as configbakupfl:
+            configbakupfl.write(configbackup)
+
+    def listenersKM():
+        listeners = {
+            "listenerk":0,
+            "listenerm":0
+            }
+        listeners["listenerk"] = keyboard.Listener(
+            on_press = pressed
+            , on_release = released
+            #,suppress=True
+            )
+        listeners["listenerk"].start()
+        listeners["listenerm"] = mouse.Listener(
+            on_move= moved
+            , on_click = clicked
+            , on_scroll = scrolled
+            #,suppress=True
+            )
+        listeners["listenerm"].start()
+        return listeners
+            
+    def sequenceRun():
+        datadict, scrptsequenc = initialconfig()
+        datadict["lasttime"] = datetime.datetime.now()
+        listeners = listenersKM()
+        return datadict, scrptsequenc, listeners
+
+    datadictionary, sequencelist, listeners = sequenceRun()
+
+
+
+
+
+
+
+
+
+
+#main run
 class tkwind(tk.Tk):
     def __init__(self, xtitle='papagaj', widthsize = 400, heightsize = 200 , *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
         self.mainframe = tk.Frame(self)
         self.title(xtitle)
+        if os.name == "posix":
+            try:
+                img = tk.Image("photo", file="papagajicon.png")
+                self.tk.call('wm','iconphoto',self._w, img)
+            except:
+                pass
+        elif os.name == "nt":
+            try:
+                self.wm_iconbitmap('papagajicon.ico')
+            except:
+                pass
         self.attributes("-topmost", True)
         self.mainframe.pack(side="top", fill="both", expand=True)
         self.mainframe.grid_rowconfigure(0, weight=1)
@@ -49,6 +427,7 @@ class tkwind(tk.Tk):
         self.mainframe.tkraise()
 
         def appdestroy(x='dddx'):
+            hejmore[0] = 1
             app.destroy()
             sys.exit()
         self.protocol("WM_DELETE_WINDOW", appdestroy)
@@ -238,8 +617,8 @@ class playFrame(tk.Frame):
                 buttonback.destroy()
                 #playPapagaj(slx,endfunctFinish,startedfunc,updateAlreadyFined,updLabels)
                 playThread = threading.Thread(target=playPapagaj, args=(slx,endfunctFinish,startedfunc,updateAlreadyFined,updLabels))
+                #playThread.daemon = True
                 playThread.start()
-
                 self.update()
                 """
                 #app.withdraw()
@@ -281,6 +660,7 @@ class recordFrame(tk.Frame):
                 buttonback.destroy()
                 #recordPapagaj(self.destroy, updLabels,saveWpickle)
                 recThread = threading.Thread(target=recordPapagaj, args=(self.destroy, updLabels,saveWpickle))
+                #recThread.daemon = True
                 recThread.start()
                 
                 label["text"] = "Recording"
@@ -321,7 +701,7 @@ class subframeAbout(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg= '#3c404d')
         buttonback = tk.Button(self, text="Menu", bd=3, command= self.destroy, **btn2style)
-        labelversion = tk.Label( self, text="papagaj v0.6\nlicense: lgpl-3.0", **sfstyle)
+        labelversion = tk.Label( self, text="papagaj " + versionOfPapagaj + "\nlicense: lgpl-3.0", **sfstyle)
         labelinfo = tk.Text(self,bg = '#3c404d',fg='white', wrap='word')
         info = """This software is usable for replay keyboard and mouse actions,\
  it is possible replay faster and as many time as you want.
@@ -378,8 +758,8 @@ class welcomeframe(tk.Frame):
             filenameToPlay =  tk.filedialog.askopenfilename(initialdir = "./Records/"
                                                         ,title = "Select record to Play"
                                                         ,filetypes = (
-                                                            ("papagaj record files","*.ppgj")
-                                                            ,("all files","*.*")
+                                                            ("papagaj record files","*.ppgj"),
+                                                            ("all files","*.*")
                                                             )
                                                    )
             if filenameToPlay and os.path.isfile(filenameToPlay):
@@ -399,9 +779,10 @@ def saveWpickle(objToSave):
         os.makedirs("./Records/", exist_ok=True)
     saveToPath =  tk.filedialog.asksaveasfilename(initialdir = "./Records/"
                                                   ,title = "Save record to File"
+                                                  ,defaultextension='.ppgj'
                                                   ,filetypes = (
-                                                      ("papagaj record files","*.ppgj")
-                                                      ,("all files","*.*")
+                                                      ("papagaj record files","*.ppgj"),
+                                                      #("all files","*.*")
                                                       )
                                              )
     if saveToPath:
@@ -451,6 +832,10 @@ Enter speedcoefficient, example: 0.5 is 2×faster, or press enter, default is 1
         },
     }
 
-app = tkwind(xtitle = 'papagaj')
+
+
+versionOfPapagaj = "v0.6.1"
+app = tkwind(xtitle = 'papagaj ' + versionOfPapagaj)
 app.addwelcomeframe()
 app.mainloop()
+sys.exit()

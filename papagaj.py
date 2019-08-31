@@ -834,7 +834,7 @@ Enter speedcoefficient, example: 0.5 is 2×faster, or press enter, default is 1
 
 
 
-versionOfPapagaj = "v0.6.3"
+versionOfPapagaj = "v0.6.2"
 app = tkwind(xtitle = 'papagaj ' + versionOfPapagaj)
 app.addwelcomeframe()
 app.mainloop()

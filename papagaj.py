@@ -30,10 +30,10 @@ import webbrowser as wb
 import tkinter as tk
 from tkinter import filedialog
 
-#from tkinter import * 
-#from tkinter.ttk import *
-hejmore = [0,]
 
+# playPapagaj
+# recordPapagaj
+# main_run
 
 
 # playPapagaj
@@ -49,7 +49,6 @@ def playPapagaj(dataAboutPlay,endfunction,startedfunc,alreadyFinishedRep,updateL
                 updateLabels("Playing paused")
             else:
                 datadictionary["paused"] = 2
-                #updateLabels("Playing")
         elif datadictionary["paused"] and key == datadictionary["cancelkeybutton"]:
             datadictionary["kill"] = 1
 
@@ -59,27 +58,21 @@ def playPapagaj(dataAboutPlay,endfunction,startedfunc,alreadyFinishedRep,updateL
                 datadictionary["paused"] = 0
                 updateLabels("Playing")
 
-    def executeseq(a, b, mousex, keyboardx):
-        c= b
-        for iii in range(a,repeatition):
-            for j,i in enumerate(sequence["sequence"][b:]):
+    def executeseq(mousex, keyboardx):
+        for iii in range(repeatition):
+            for i in sequence["sequence"]:
                 if hejmore[0]:
                     sys.exit()
                 if datadictionary["paused"]:
-                    c=b+j
-                    return True,a,c
+                    yield None
                 if datadictionary["kill"]:
-                    c=b+j
-                    return False,a,c
+                    yield 1
                 if i[0] in ['keyboardx.press({0})', 'keyboardx.release({0})']:
                     exec(i[0].format('sequence["keydirectory"][i[1]]'))
                 else:
                     exec(i[0].format(i[1]))
-                c= b+j+1
-            b=0
-            a = iii+1
-            alreadyFinishedRep(a,repeatition,koeficientspeed)
-        return False,a,c
+            alreadyFinishedRep(iii+1,repeatition,koeficientspeed)
+        yield 1
 
     def readWpickle(a):
         with open(a, 'rb') as pickleFile:
@@ -91,8 +84,6 @@ def playPapagaj(dataAboutPlay,endfunction,startedfunc,alreadyFinishedRep,updateL
             "lasttime": 0
             , "paused": False
             , "kill": False
-            , "alreadyrepeated": 0
-            , "alreadyexecuted": 0
             , "configfile": 'papagajconfig.pcfg'
             }
 
@@ -180,22 +171,19 @@ pausekeybutton=<<keyboard.Key.shift_r>>""" + cancelbutton
 
     def startPlay():
         datadictionary["paused"] = 0
+        exeseq = executeseq(mousex, keyboardx)
         while not datadictionary["kill"]:
             if hejmore[0]:
                 sys.exit()
             time.sleep(0.2)
             if not datadictionary["paused"]:
-                endRun \
-                , datadictionary["alreadyrepeated"] \
-                , datadictionary["alreadyexecuted"] = executeseq(datadictionary["alreadyrepeated"]
-                                                                 , datadictionary["alreadyexecuted"]
-                                                                 , mousex
-                                                                 , keyboardx
-                                                                 )
+                endRun = next(exeseq)
                 if endRun:
-                    continue
-                else:
+                    exeseq.close()
                     break
+                else:
+                    continue
+
         stop()
 
     repeatition = dataAboutPlay['repeatition']['result']
@@ -204,9 +192,6 @@ pausekeybutton=<<keyboard.Key.shift_r>>""" + cancelbutton
     mousex, keyboardx, listenerk = makeListenAndControl()
     startedfunc()
     startPlay()
-
-
-
 
 
 
@@ -233,10 +218,10 @@ def recordPapagaj(endfunction,updateLabels,saveSeqFunc):
         if commandis in ['keyboardx.press({0})', 'keyboardx.release({0})']:
             try:
                 try:
-                    if elvalue.vk == 0:#elvalue == "<0>" or elvalue.vk == 0
+                    if elvalue.vk == 0:
                         raise
                 except AttributeError:
-                    if str(elvalue) == "<0>":#elvalue == "<0>" or elvalue.vk == 0
+                    if str(elvalue) == "<0>":
                         raise
             except:
                 return
@@ -301,6 +286,7 @@ def recordPapagaj(endfunction,updateLabels,saveSeqFunc):
             "sequence":list()
             , "keydirectory":dict()
             }
+        elxprint(scriptsequence,'time.sleep({0})',0.1)
         datadictionary={
             "lasttime": 0
             ,"paused1": False
@@ -320,7 +306,6 @@ def recordPapagaj(endfunction,updateLabels,saveSeqFunc):
             else:
                 scrollkoeficient = 120
         datadictionary["scrollkoeficient"] = scrollkoeficient
-        #datadictionary["savekeyboarddictto"] = str(findall('savekeyboarddictto=<<(.*?)>>',dataRaw)[0])
         datadictionary["pausekeybutton"] = eval(findall('pausekeybutton=<<(.*?)>>',dataRaw)[0])
         datadictionary["cancelkeybutton"] = eval(findall('cancelkeybutton=<<(.*?)>>',dataRaw)[0])
         return datadictionary, scriptsequence
@@ -364,14 +349,12 @@ pausekeybutton=<<keyboard.Key.shift_r>>""" + cancelbutton
         listeners["listenerk"] = keyboard.Listener(
             on_press = pressed
             , on_release = released
-            #,suppress=True
             )
         listeners["listenerk"].start()
         listeners["listenerm"] = mouse.Listener(
             on_move= moved
             , on_click = clicked
             , on_scroll = scrolled
-            #,suppress=True
             )
         listeners["listenerm"].start()
         return listeners
@@ -386,14 +369,7 @@ pausekeybutton=<<keyboard.Key.shift_r>>""" + cancelbutton
 
 
 
-
-
-
-
-
-
-
-#main run
+# main_run
 class tkwind(tk.Tk):
     def __init__(self, xtitle='papagaj', widthsize = 400, heightsize = 200 , *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
@@ -431,7 +407,6 @@ class tkwind(tk.Tk):
             app.destroy()
             sys.exit()
         self.protocol("WM_DELETE_WINDOW", appdestroy)
-        #self.bind("<Destroy>", appdestroy)
 
     def addwelcomeframe(self):
         self.welcomeframe = welcomeframe(self.mainframe)
@@ -487,7 +462,7 @@ class subframe(tk.Frame):
         self.button = tk.Button(self, text=xxbutton, bd=3,**btn2style)
 
         self.itersequence = iter(mdict['sequence'])
-        self.askfornextanswer(mdict,self.itersequence)#teraz
+        self.askfornextanswer(mdict,self.itersequence)
         self.button.config(command=lambda: self.confirmb(mdict,self.itersequence))
         self.buttonback.config(command=lambda: self.destroy())
         self.entry1.bind('<Return>', lambda x: self.confirmb(mdict,self.itersequence))
@@ -525,7 +500,7 @@ class subframe(tk.Frame):
 
     def confirmb(self,resdict,resitersequence):
         self.answer = self.entry1.get()
-        #it works just if answers must be number
+        ###it works just if answers must be number !!!
         if not self.answer:
             self.answer = 1
         self.answer = resdict[self.actualseq]['checkfunc'](self.answer)
@@ -561,8 +536,14 @@ btn2style={ "activebackground" : '#bada55'
     , "wraplength":380
           }
 
-instructionPapagaj = """For Pause/Continue press Right SHIFT
-For stop,first pause runing and then press Left ALT
+hejmore = [0]
+
+instructionPapagajPlay = """For pause/continue playing press Right SHIFT.
+For stop recording  press pause (Right SHIFT), then press left ALT.
+"""
+
+instructionPapagajRec = """For pause/continue recording press Right SHIFT.
+For stop recording press pause (Right SHIFT), then press left ALT.
 """
 
 class playFrame(tk.Frame):
@@ -575,7 +556,7 @@ class playFrame(tk.Frame):
                                                                                               ,slx['koeficientspeed']['result']
                                                                                               )
                              , **sfstyle, anchor="center")
-        label2 = tk.Label( self, text=instructionPapagaj, **sfstyle)
+        label2 = tk.Label( self, text=instructionPapagajPlay, **sfstyle)
         self.grid_columnconfigure(0,weight=1 )
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=1)
@@ -588,31 +569,30 @@ class playFrame(tk.Frame):
         label2.grid(row = 3,column=0,sticky='nswe')
         
         def startedfunc():
-            label2["text"] = instructionPapagaj
-            label['text'] = "Play"
-            self.update()
+            updLabels("Play", instructionPapagajPlay)
             app.iconify()
 
         def endfunctFinish():
-            label['text'] = "Finished"
+            updLabels("Finished")
             buttonback = tk.Button(self, text="Menu", bd=3, command= self.destroy, **btn2style)
             buttonback.grid(row = 3,column=0,sticky='nswe')
             
         def updateAlreadyFined(x,y,z):
             labelcnt["text"] = " completed {} from {}\nspeedcoefficient {}".format(x,y,z)
-            self.update()
+
+        def updLabels(lab=0, lab2=0):
+            if lab:
+                label["text"] = lab
+            if lab2:
+                label2["text"] = lab2
+                self.update()
+            
         def updtime():
-            def updLabels(lab=0, lab2=0):
-                if lab:
-                    label["text"] = lab
-                if lab2:
-                    label2["text"] = lab2
-                    self.update()
             varints[0] -=1
             label['text'] = "Play will start after {}s".format(varints[0])
             self.update()
             if varints[0] == 2:
-                label2["text"] = "Now don't touch keyboard and mouse\n" # + instructionPapagaj
+                label2["text"] = "Now don't touch keyboard and mouse\n"
             if varints[0] == 0:
                 buttonback.destroy()
                 #playPapagaj(slx,endfunctFinish,startedfunc,updateAlreadyFined,updLabels)
@@ -636,7 +616,7 @@ class recordFrame(tk.Frame):
         varint = [8,]
         label = tk.Label( self, text="Recording will start after {}s".format(varint[0]), **headerstyle)
         buttonback = tk.Button(self, text="Menu", bd=3, command= self.destroy, **btn2style)
-        label2 = tk.Label( self, text= instructionPapagaj, **sfstyle)
+        label2 = tk.Label( self, text= instructionPapagajRec, **sfstyle)
 
         self.grid_columnconfigure(0,weight=1 )
         self.grid_rowconfigure(0, weight=0)
@@ -645,13 +625,15 @@ class recordFrame(tk.Frame):
         buttonback.grid(row = 0,column=0,sticky='nswe')
         label2.grid(row = 2,column=0,sticky='nswe')
 
+        def updLabels(lab=0, lab2=0):
+            if lab:
+                label["text"] = lab
+            if lab2:
+                label2["text"] = lab2
+
         def updtime():
             nah = "Recording will start after {}s"
-            def updLabels(lab=0, lab2=0):
-                if lab:
-                    label["text"] = lab
-                if lab2:
-                    label2["text"] = lab2
+
             if varint[0] > 0:
                 label['text'] = nah.format(varint[0])
             if varint[0] == 2:
@@ -662,9 +644,7 @@ class recordFrame(tk.Frame):
                 recThread = threading.Thread(target=recordPapagaj, args=(self.destroy, updLabels,saveWpickle))
                 #recThread.daemon = True
                 recThread.start()
-                
-                label["text"] = "Recording"
-                label2["text"] = instructionPapagaj
+                updLabels("Recording", instructionPapagajRec)
             if varint[0] == 0:
                 app.iconify()
             else:
@@ -695,16 +675,17 @@ class Shotcuts(tk.Frame):
         buttonweb.grid(row = 2,column=0,sticky='nswe',padx=(20, 20),pady=(15, 15))
         self.grid_rowconfigure(2, weight=1)
         self.grid_rowconfigure(3, weight=1)
-        
 
 class subframeAbout(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg= '#3c404d')
         buttonback = tk.Button(self, text="Menu", bd=3, command= self.destroy, **btn2style)
-        labelversion = tk.Label( self, text="papagaj " + versionOfPapagaj + "\nlicense: lgpl-3.0", **sfstyle)
+        labelversion = tk.Label( self, text="papagaj " + versionOfPapagaj + "   license: lgpl-3.0", **sfstyle)
         labelinfo = tk.Text(self,bg = '#3c404d',fg='white', wrap='word')
-        info = """This software is usable for replay keyboard and mouse actions,\
- it is possible replay faster and as many time as you want.
+        info = """  This software is usable for replay keyboard and mouse actions, it is possible replay faster and as many time as you want.
+    For pause/continue recording or replay press Right SHIFT.
+    For stop recording or playing press pause (Right SHIFT), then press left ALT.
+    Records have extension .ppgj
 """
         labelinfo.insert('end', info)
         labelinfo.config(state='disabled')
@@ -713,7 +694,6 @@ class subframeAbout(tk.Frame):
         self.grid_rowconfigure(1, weight=0)
         self.grid_rowconfigure(2, weight=1)
         self.grid_rowconfigure(3, weight=0)
-        
 
         labelversion.grid(row = 1,column=0,sticky='nswe',padx=(15, 15),pady=(5, 5))
         labelinfo.grid(row = 2,column=0,sticky='nswe',padx=(15, 15),pady=(5, 5))
@@ -723,13 +703,6 @@ class subframeAbout(tk.Frame):
             wb.open_new_tab('https://www.gnu.org/licenses/lgpl-3.0.en.html')
         buttonweb = tk.Button(self, text="lgpl-3.0", bd=3, command= lgplpage, **btn2style)
         buttonweb.grid(row = 3,column=0,sticky='nswe')
-        """buttongit = tk.Button(self, text="Git", bd=3, command= gitpage, **btn2style)
-        buttonweb = tk.Button(self, text="Homepage", bd=3, command= gitpage, **btn2style)
-        buttongit.grid(row = 3,column=0,sticky='nswe',padx=(20, 20),pady=(15, 15))
-        buttonweb.grid(row = 2,column=0,sticky='nswe',padx=(20, 20),pady=(15, 15))
-        self.grid_rowconfigure(2, weight=1)
-        self.grid_rowconfigure(3, weight=1)"""
-
 
 class welcomeframe(tk.Frame):
     def __init__(self, parent):
@@ -833,8 +806,7 @@ Enter speedcoefficient, example: 0.5 is 2×faster, or press enter, default is 1
     }
 
 
-
-versionOfPapagaj = "v0.6.2"
+versionOfPapagaj = "v0.6.3"
 app = tkwind(xtitle = 'papagaj ' + versionOfPapagaj)
 app.addwelcomeframe()
 app.mainloop()

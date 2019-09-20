@@ -80,8 +80,10 @@ def exitppgj_func():
 
 def playagain_func(data_for_play):
     if not data_for_play.get('fileToOpen'):
+        print("Impossible play again before play first time.")
         return
     if not data_for_play.get('repeatition'):
+        print("Impossible play again before play first time.")
         return
     for question in data_for_play['sequence']:
         print(f"{question} is {data_for_play[question]['result']}")

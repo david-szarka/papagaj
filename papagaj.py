@@ -61,8 +61,8 @@ def aboutpapagaj_func():
     This software is usable for replay keyboard and mouse actions.
     It is possible replay faster and as many time as you want.
     How use it?
-    For pause(or continue) press Right SHIFT.
-    For stop press pause(Right SHIFT), then press Left ALT.
+    For pause(or continue) press Right Ctrl.
+    For stop press pause(Right Ctrl), then press Right ALT.
     Records have extension .ppgj
     """
     homepage = "https://github.com/david-szarka/papagaj"

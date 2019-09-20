@@ -1,1 +1,1 @@
-pyinstaller --onefile --windowed --icon=papagajicon.ico papagaj.py
+pyinstaller --onefile --icon=papagajicon.ico papagaj.py

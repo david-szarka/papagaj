@@ -15,8 +15,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-print("""\nWelcome in papagaj, bonded by Dávid Szarka
-Loading...""")
+print("""\nWelcome in papagaj, bonded by Dávid Szarka""")
 
 import time
 import ctypes

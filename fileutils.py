@@ -31,6 +31,8 @@ def saveWpickle(objToSave):
     saveToPath = tk.filedialog.asksaveasfilename(initialdir="./Records/"
                                                  , title="Save record to File"
                                                  , defaultextension='.ppgj'
+                                                 , initialfile="temporary.ppgj"
+                                                 , confirmoverwrite=False
                                                  , filetypes=(
             ("papagaj record files", "*.ppgj"),
             # ("all files","*.*")
@@ -49,6 +51,7 @@ def voteToPlay():
     root.attributes("-topmost", True)
     filenameToPlay = tk.filedialog.askopenfilename(initialdir="./Records/"
                                                    , title="Select record to Play"
+                                                   , initialfile="temporary.ppgj"
                                                    , filetypes=(
             ("papagaj record files", "*.ppgj"),
             ("all files", "*.*")

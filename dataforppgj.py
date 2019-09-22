@@ -19,6 +19,8 @@
 def repeatitionCheck(x):
     try:
         repeatition = int(x)
+        if not repeatition:
+            return None
     except:
         repeatition = 1
     return repeatition
@@ -36,16 +38,20 @@ meniItemDict = {
     1:"Record"
     ,2:"Play"
     ,3:"Play Again"
-    ,4:"About"
-    ,5:"Exit"
+    ,4:"Record with Screenshot"
+    ,5:"Play with Screenshot"
+    ,6:"About"
+    ,0:"Exit"
+
 }
 
 dataForPlay = {
-    'menudict':meniItemDict,
+    'menudict': meniItemDict,
+    'shot': None,
     'sequence': ['repeatition', 'koeficientspeed'],
     'repeatition': {
         'header': "Number of repetitions",
-        'text': " =>How many imes you want replay actions, or press enter, default is 1\nEnter real number:",
+        'text': " =>How many times you want replay actions, or press enter, default is 1\nEnter real number:",
         'result': 0,
         'checkfunc': repeatitionCheck
     },

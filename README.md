@@ -1,4 +1,4 @@
-# papagaj_v1.0.4
+# papagaj_v1.0.6
 
 #This software record manipulation with mouse and keyboard.<br>
 #You can replay record multiple times and run it faster or slower.<br>

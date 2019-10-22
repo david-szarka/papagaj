@@ -19,7 +19,10 @@ try:
     awareness = ctypes.c_int()
     ctypes.windll.shcore.SetProcessDpiAwareness(2)
 except:
-    print("""Scale factor of display is not processed, 
+    try:
+        ctypes.windll.user32.SetProcessDPIAware()
+    except:
+        print("""Scale factor of display is not processed, 
 check if recorded mouse position is correct, 
 if not change display SCALE to 100%""")
     

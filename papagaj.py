@@ -15,6 +15,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 import ctypes
+try:
+    awareness = ctypes.c_int()
+    ctypes.windll.shcore.SetProcessDpiAwareness(2)
+except:
+    print("""Scale factor of display is not processed, 
+check if recorded mouse position is correct, 
+if not change display SCALE to 100%""")
+    
 from papagaj_packages import customconsole, consolecorrect
 """import customconsole
 import consolecorrect"""
@@ -155,7 +163,7 @@ def aboutpapagaj_func():
     """
     homepage = "https://github.com/david-szarka/papagaj"
     lgpl3license = 'https://www.gnu.org/licenses/lgpl-3.0.en.html'
-    print("\npapagaj_v1.0.6\nCopyright (C) 2019 Dávid Szarka")
+    print("\npapagaj_v1.0.7\nCopyright (C) 2019 Dávid Szarka")
     print(info)
     print("Homepage:", homepage)
     print("License:", lgpl3license)
